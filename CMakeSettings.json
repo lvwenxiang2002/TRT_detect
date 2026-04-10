@@ -1,0 +1,37 @@
+﻿{
+  "configurations": [
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\build\\${name}",
+      "installRoot": "${projectDir}\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "D:\\soft\\qt\\qt_project\\5.15.1\\msvc2019_64",
+          "type": "STRING"
+        },
+        {
+          "name": "TRT_ROOT",
+          "value": "D:\\soft\\TensorRT-8.5.1.7",
+          "type": "PATH"
+        },
+        {
+          "name": "CUDA_TOOLKIT_ROOT_DIR",
+          "value": "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v11.8",
+          "type": "PATH"
+        },
+        {
+          "name": "OpenCV_DIR",
+          "value": "D:\\soft\\opencv\\build",
+          "type": "PATH"
+        }
+      ]
+    }
+  ]
+}
