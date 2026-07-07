@@ -1,0 +1,67 @@
+# ── Build & IDE Directories ──
+.vs/
+build/
+out/
+install/
+bin/
+Testing/
+_deps/
+
+# ── CMake & Build Artifacts ──
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+*_autogen/
+
+# ── Compiled Binaries & Objects ──
+*.exe
+*.dll
+*.lib
+*.obj
+*.o
+*.a
+*.so
+*.dylib
+*.pdb
+*.exp
+
+# ── Deep Learning Models & Weights ──
+*.engine
+*.plan
+*.onnx
+*.weights
+*.pt
+*.pth
+
+# ── Images & Inference Outputs ──
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.tiff
+*.tif
+*.webp
+drawn/
+labels/
+orig/
+drawn_large/
+
+# ── IDE Configs ──
+*.user
+*.suo
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# ── Temporary / OS files ──
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.log

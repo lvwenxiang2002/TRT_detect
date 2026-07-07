@@ -22,9 +22,9 @@ int ImageQueue::remaining() const { QMutexLocker lk(&mutex_); return paths_.size
 // InferenceWorker 实现
 // ─────────────────────────────────────────────────────────────────────────────
 InferenceWorker::InferenceWorker(TRTEngine* engine, std::shared_ptr<ImageQueue> queue, const QString& outputDir,
-    int cropW, int cropH, int overlap, int padVal, double pixelPrecision, bool drawLargeImg, QObject* parent)
+    double resizeRatioW, double resizeRatioH, double pixelPrecision, bool drawLargeImg, QObject* parent)
     : QObject(parent), QRunnable(), engine_(engine), queue_(std::move(queue)), outputDir_(outputDir),
-    cropW_(cropW), cropH_(cropH), overlap_(overlap), padVal_(padVal), pixelPrecision_(pixelPrecision), drawLargeImg_(drawLargeImg)
+    resizeRatioW_(resizeRatioW), resizeRatioH_(resizeRatioH), pixelPrecision_(pixelPrecision), drawLargeImg_(drawLargeImg)
 {
     setAutoDelete(false);
 }
@@ -42,11 +42,6 @@ void InferenceWorker::run() {
                 continue;
             }
 
-            int strideX = cropW_ - overlap_;
-            int strideY = cropH_ - overlap_;
-            if (strideX <= 0) strideX = cropW_;
-            if (strideY <= 0) strideY = cropH_;
-
             QFileInfo fi(imgPath);
             QString baseName = fi.completeBaseName();
             QString ext = fi.suffix();
@@ -55,38 +50,31 @@ void InferenceWorker::run() {
             // 🌟 容器：收集整张大图上的所有缺陷框
             std::vector<Detection> globalDets;
 
-            for (int y = 0; y < largeImg.rows; y += strideY) {
-                for (int x = 0; x < largeImg.cols; x += strideX) {
-                    if (stopRequested_) break;
+            cv::Mat resizedImg;
+            cv::resize(largeImg, resizedImg, cv::Size(), resizeRatioW_, resizeRatioH_);
 
-                    int rectW = std::min(cropW_, largeImg.cols - x);
-                    int rectH = std::min(cropH_, largeImg.rows - y);
-                    cv::Rect roi(x, y, rectW, rectH);
+            std::vector<float> inputBlob = preprocessImage(resizedImg);
+            if (inputBlob.empty()) {
+                emit imageFinished(imgPath, false);
+                continue;
+            }
 
-                    cv::Mat crop = largeImg(roi).clone();
-
-                    if (rectW < cropW_ || rectH < cropH_) {
-                        cv::copyMakeBorder(crop, crop, 0, cropH_ - rectH, 0, cropW_ - rectW,
-                            cv::BORDER_CONSTANT, cv::Scalar(padVal_, padVal_, padVal_));
-                    }
-
-                    std::vector<float> inputBlob = preprocessImage(crop);
-                    if (inputBlob.empty()) continue;
-
-                    std::vector<float> outputBlob;
-                    bool ok = engine_->infer(inputBlob, outputBlob);
-                    if (!ok) { allCropsOk = false; continue; }
-
-                    if (ok && !outputDir_.isEmpty()) {
-                        // 🌟 保存小图，并接收该小图返回的高精度坐标框
-                        auto cropDets = saveResults(crop, baseName, x, y, ext, outputBlob);
-                        for (auto& d : cropDets) {
-                            // 映射回大图上的绝对像素坐标
-                            d.box.x += x;
-                            d.box.y += y;
-                            globalDets.push_back(d);
-                        }
-                    }
+            std::vector<float> outputBlob;
+            bool ok = engine_->infer(inputBlob, outputBlob);
+            if (!ok) {
+                allCropsOk = false;
+            } else if (!outputDir_.isEmpty()) {
+                // 🌟 保存结果
+                auto cropDets = saveResults(resizedImg, baseName, 0, 0, ext, outputBlob);
+                for (auto& d : cropDets) {
+                    // 映射回大图上的绝对像素坐标
+                    d.box.x = static_cast<int>(d.box.x / resizeRatioW_);
+                    d.box.y = static_cast<int>(d.box.y / resizeRatioH_);
+                    d.box.width = static_cast<int>(d.box.width / resizeRatioW_);
+                    d.box.height = static_cast<int>(d.box.height / resizeRatioH_);
+                    d.exact_w /= resizeRatioW_;
+                    d.exact_h /= resizeRatioH_;
+                    globalDets.push_back(d);
                 }
             }
 

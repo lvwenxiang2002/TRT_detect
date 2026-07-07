@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <QObject>
 #include <QRunnable>
 #include <QString>
@@ -36,7 +36,7 @@ class InferenceWorker : public QObject, public QRunnable {
     Q_OBJECT
 public:
     InferenceWorker(TRTEngine* engine, std::shared_ptr<ImageQueue> queue, const QString& outputDir,
-        int cropW, int cropH, int overlap, int padVal, double pixelPrecision, bool drawLargeImg, QObject* parent = nullptr);
+        double resizeRatioW, double resizeRatioH, double pixelPrecision, bool drawLargeImg, QObject* parent = nullptr);
 
     void run() override;
     void requestStop() { stopRequested_ = true; }
@@ -55,10 +55,8 @@ private:
     std::shared_ptr<ImageQueue>  queue_;
     QString                      outputDir_;
 
-    int cropW_;
-    int cropH_;
-    int overlap_;
-    int padVal_;
+    double resizeRatioW_;
+    double resizeRatioH_;
     double pixelPrecision_;
     bool drawLargeImg_; // 🌟 大图映射开关
 

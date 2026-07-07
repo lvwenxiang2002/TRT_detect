@@ -46,12 +46,10 @@ void EngineTaskWidget::buildUi(int index) {
     grid->addWidget(new QLabel("输出:"), 3, 0); grid->addWidget(outFolderEdit_, 3, 1); grid->addWidget(outFolderBtn_, 3, 2);
     mainLayout->addLayout(grid);
 
-    // ── 控制栏 1: 裁图参数 ──
+    // ── 控制栏 1: Resize 倍率 ──
     QHBoxLayout* ctrlLayout1 = new QHBoxLayout();
-    ctrlLayout1->addWidget(new QLabel("宽:")); cropWSpin_ = new QSpinBox(this); cropWSpin_->setRange(32, 16384); cropWSpin_->setValue(2048); ctrlLayout1->addWidget(cropWSpin_);
-    ctrlLayout1->addWidget(new QLabel("高:")); cropHSpin_ = new QSpinBox(this); cropHSpin_->setRange(32, 16384); cropHSpin_->setValue(2048); ctrlLayout1->addWidget(cropHSpin_);
-    ctrlLayout1->addWidget(new QLabel("重叠:")); overlapSpin_ = new QSpinBox(this); overlapSpin_->setRange(0, 4096); overlapSpin_->setValue(20); ctrlLayout1->addWidget(overlapSpin_);
-    ctrlLayout1->addWidget(new QLabel("填充(0-255):")); padSpin_ = new QSpinBox(this); padSpin_->setRange(0, 255); padSpin_->setValue(0); ctrlLayout1->addWidget(padSpin_);
+    ctrlLayout1->addWidget(new QLabel("宽倍率:")); resizeRatioWSpin_ = new QDoubleSpinBox(this); resizeRatioWSpin_->setDecimals(3); resizeRatioWSpin_->setRange(0.001, 100.0); resizeRatioWSpin_->setValue(1.0); ctrlLayout1->addWidget(resizeRatioWSpin_);
+    ctrlLayout1->addWidget(new QLabel("高倍率:")); resizeRatioHSpin_ = new QDoubleSpinBox(this); resizeRatioHSpin_->setDecimals(3); resizeRatioHSpin_->setRange(0.001, 100.0); resizeRatioHSpin_->setValue(1.0); ctrlLayout1->addWidget(resizeRatioHSpin_);
     mainLayout->addLayout(ctrlLayout1);
 
     // ── 控制栏 2: 精度、线程数与大图开关 ──
@@ -142,15 +140,13 @@ void EngineTaskWidget::startInference() {
     if (!pool_) pool_ = std::make_unique<QThreadPool>();
     pool_->setMaxThreadCount(threadCount);
 
-    int cropW = cropWSpin_->value();
-    int cropH = cropHSpin_->value();
-    int overlap = overlapSpin_->value();
-    int padVal = padSpin_->value();
+    double resizeRatioW = resizeRatioWSpin_->value();
+    double resizeRatioH = resizeRatioHSpin_->value();
     double precision = pixelPrecisionSpin_->value();
     bool drawLarge = drawLargeImgCheck_->isChecked(); // 🌟 提取大图映射开关状态
 
     for (int i = 0; i < threadCount; ++i) {
-        auto* worker = new InferenceWorker(engine_.get(), queue_, outFolder, cropW, cropH, overlap, padVal, precision, drawLarge, this);
+        auto* worker = new InferenceWorker(engine_.get(), queue_, outFolder, resizeRatioW, resizeRatioH, precision, drawLarge, this);
         connect(worker, &InferenceWorker::imageFinished, this, &EngineTaskWidget::onImageFinished, Qt::QueuedConnection);
         connect(worker, &InferenceWorker::workerDone, this, &EngineTaskWidget::onWorkerDone, Qt::QueuedConnection);
         connect(worker, &InferenceWorker::errorOccurred, this, &EngineTaskWidget::onEngineLoadError, Qt::QueuedConnection);

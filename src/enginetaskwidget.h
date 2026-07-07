@@ -56,10 +56,8 @@ private:
     QLineEdit* outFolderEdit_ = nullptr;
     QPushButton* outFolderBtn_ = nullptr;
 
-    QSpinBox* cropWSpin_ = nullptr;
-    QSpinBox* cropHSpin_ = nullptr;
-    QSpinBox* overlapSpin_ = nullptr;
-    QSpinBox* padSpin_ = nullptr;
+    QDoubleSpinBox* resizeRatioWSpin_ = nullptr;
+    QDoubleSpinBox* resizeRatioHSpin_ = nullptr;
     QDoubleSpinBox* pixelPrecisionSpin_ = nullptr;
     QSpinBox* threadSpin_ = nullptr;
     QCheckBox* drawLargeImgCheck_ = nullptr; // 🌟 新增：大图映射开关
